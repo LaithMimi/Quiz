@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quiz/controllers/sign_up_controller.dart';
-import '../services/api_client.dart';
 
 class SignUpScreenGetX extends StatelessWidget {
   SignUpScreenGetX({super.key});
@@ -14,7 +13,7 @@ class SignUpScreenGetX extends StatelessWidget {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(title: const Text('Sign Up')),
-        body: SingleChildScrollView(
+        body: Obx(() => SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -107,7 +106,7 @@ class SignUpScreenGetX extends StatelessWidget {
                     ),
                     labelText: 'Confirm Password',
                     border: const OutlineInputBorder(),
-                    errorText: controller.confirmError.value.isEmpty ? null : controller.confirmError.value,
+                    errorText: (controller.confirmError.value?.isEmpty ?? true) ? null : controller.confirmError.value,
                   ),
                 ),
               ),
@@ -128,10 +127,10 @@ class SignUpScreenGetX extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: isLoading
+                      onPressed: controller.isLoading.value
                           ? null
                           : () => controller.signUp(),
-                      child: isLoading
+                      child: controller.isLoading.value
                           ? const SizedBox(
                               height: 18,
                               width: 18,
@@ -193,10 +192,8 @@ class SignUpScreenGetX extends StatelessWidget {
             )
             ],
           ),
-        ),
+        )),
       ),
     );
   }
-}
-
 }
