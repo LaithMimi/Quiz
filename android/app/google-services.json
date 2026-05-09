@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1078119698934",
+    "project_id": "kanban-468fd",
+    "storage_bucket": "kanban-468fd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1078119698934:android:ecd57961e44f17a4afb7d7",
+        "android_client_info": {
+          "package_name": "com.example.quiz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1078119698934-vm7eshuq5e6hufgern21ib371p8fulkh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbif5yQbmGaNR5TwCLDtOoXqXrTHlUIPE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1078119698934-vm7eshuq5e6hufgern21ib371p8fulkh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

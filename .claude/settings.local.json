@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(dart analyze \"c:\\\\Users\\\\Lenovo\\\\Documents\\\\Programming projects\\\\Technilic Course\\\\Quiz\\\\lib\\\\services\\\\api_client.dart\" 2>&1)",
+      "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\(\"c:\\\\Users\\\\Lenovo\\\\Documents\\\\Programming projects\\\\Technilic Course\\\\Quiz\\\\lib\\\\services\\\\api_client.dart\"\\); \"Total bytes: $\\($bytes.Length\\)\"; \"First 6 bytes: $\\($bytes[0..5] -join ', '\\)\")",
+      "PowerShell(dart --version 2>&1)",
+      "PowerShell(flutter --version 2>&1)",
+      "Bash(find /c/Users/Lenovo/.pub-cache/hosted/pub.dev -path \"*/http-*/lib/*.dart\" -name \"*.dart\" 2>/dev/null | head -5)",
+      "Read(//c/Users/Lenovo/.pub-cache/hosted/**)",
+      "Bash(find /c/Users/Lenovo/.pub-cache -path \"*/http-*/lib/*.dart\" 2>/dev/null | head -10)",
+      "Read(//c/Users/Lenovo/**)",
+      "Bash(awk '{print $NF}')",
+      "Bash(xargs -I{} cat {})",
+      "Bash(xargs cat)"
+    ]
+  }
+}
