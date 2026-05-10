@@ -61,6 +61,7 @@ class SignUpScreenGetX extends StatelessWidget {
                     labelText: 'Email',
                     hintText: 'Enter your Email',
                     border: const OutlineInputBorder(),
+                    errorText: controller.emailError.value,
                   ),
                 ),
               ),
