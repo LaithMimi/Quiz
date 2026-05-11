@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quiz/services/auth_service.dart';
 import '../services/api_client.dart';
-import '../screens/home_page.dart';
-import '../screens/login_page.dart';
 
 class SignUpController extends GetxController {
   final TextEditingController usernameController = TextEditingController();
@@ -52,13 +50,13 @@ class SignUpController extends GetxController {
 
       if (user == null) return;     
 
-      Get.off(() => const MyHomePage()); 
+      Get.offNamed('/home');
     } catch (e) {
-      Get.snackbar(                
+      Get.snackbar(
         'Google Sign Up Failed',
         e.toString(),
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
         colorText: Colors.white,
       );
     } finally {
@@ -96,13 +94,13 @@ class SignUpController extends GetxController {
         email: email,
         password: password,
       );
-      Get.off(() => const MyHomePage()); 
+      Get.offNamed('/home');
     } catch (e) {
       Get.snackbar(
         'Sign Up Failed',
         e.toString(),
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
         colorText: Colors.white,
       );
     } finally {
@@ -110,7 +108,7 @@ class SignUpController extends GetxController {
     }
   }
   
-  void handleSignIn() => Get.off(() => LoginScreenGetX());
+  void handleSignIn() => Get.offNamed('/login');
 
   @override
   void onClose() {

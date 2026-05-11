@@ -21,4 +21,5 @@ class ApiConfig {
   }
 
   static String get signUpUrl => '$baseUrl/api/Auth/signup';
+  static String get loginUrl  => '$baseUrl/api/Auth/login';
 }

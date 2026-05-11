@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:convert' show jsonEncode, jsonDecode;
 
 import 'package:http/http.dart' as http;
 import 'package:quiz/config/api_config.dart';
@@ -29,7 +29,7 @@ class ApiClient {
     final response = await _client.post(
       Uri.parse(ApiConfig.signUpUrl),
       headers: _jsonHeaders,
-      body: json.encode({
+      body: jsonEncode({
         'username': username,
         'email': email,
         'password': password,
@@ -37,7 +37,24 @@ class ApiClient {
     );
 
     _ensureSuccess(response, 'POST ${ApiConfig.signUpUrl}');
-    return json.decode(response.body) as Map<String, dynamic>;
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> login({
+    required String username,
+    required String password,
+  }) async {
+    final response = await _client.post(
+      Uri.parse(ApiConfig.loginUrl),
+      headers: _jsonHeaders,
+      body: jsonEncode({
+        'username': username,
+        'password': password,
+      }),
+    );
+
+    _ensureSuccess(response, 'POST ${ApiConfig.loginUrl}');
+    return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
   void close() => _client.close();
