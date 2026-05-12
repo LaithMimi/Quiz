@@ -11,7 +11,9 @@
       "Read(//c/Users/Lenovo/**)",
       "Bash(awk '{print $NF}')",
       "Bash(xargs -I{} cat {})",
-      "Bash(xargs cat)"
+      "Bash(xargs cat)",
+      "Bash(flutter analyze *)",
+      "Bash(Remove-Item lib\\\\services\\\\api_client.dart, lib\\\\config\\\\api_config.dart, lib\\\\services\\\\unsafe_http_client.dart, lib\\\\services\\\\unsafe_http_client_native.dart)"
     ]
   }
 }

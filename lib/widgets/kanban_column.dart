@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quiz/controllers/kanban_controller.dart';
-import 'package:quiz/widgets/task_card.dart';
+import 'package:quiz/models/kanban_column_data.dart';
+import 'package:quiz/widgets/my_task_list.dart';
 
 class KanbanColumn extends StatelessWidget {
   const KanbanColumn({
@@ -16,10 +17,14 @@ class KanbanColumn extends StatelessWidget {
 
   Color get _headerColor {
     switch (status) {
-      case 'todo':       return Colors.orange.shade600;
-      case 'inProgress': return Colors.blue.shade600;
-      case 'done':       return Colors.green.shade600;
-      default:           return Colors.grey;
+      case 'todo':
+        return Colors.orange.shade600;
+      case 'inProgress':
+        return Colors.blue.shade600;
+      case 'done':
+        return Colors.green.shade600;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -44,7 +49,8 @@ class KanbanColumn extends StatelessWidget {
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: _headerColor,
                 borderRadius:
@@ -62,38 +68,36 @@ class KanbanColumn extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '${tasks.length}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                      style: const TextStyle(
+                          color: Colors.white, fontSize: 12),
                     ),
                   ),
                 ],
               ),
             ),
-            Expanded(
-              child: tasks.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No tasks',
-                        style: TextStyle(
-                            color: Colors.grey.shade400, fontSize: 13),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(8),
-                      itemCount: tasks.length,
-                      itemBuilder: (_, i) => TaskCard(
-                        task: tasks[i],
-                        controller: controller,
-                      ),
-                    ),
-            ),
+            if (tasks.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Text(
+                    'No tasks',
+                    style: TextStyle(
+                        color: Colors.grey.shade400, fontSize: 13),
+                  ),
+                ),
+              )
+            else
+              MyTaskList(
+                columnData: KanbanColumnData(label: label, tasks: tasks),
+                onDelete: (i) => controller.deleteTask(tasks[i]),
+              ),
           ],
         ),
       ),

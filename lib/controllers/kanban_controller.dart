@@ -1,13 +1,15 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:quiz/models/task.dart';
-import 'package:quiz/services/api_client.dart';
+import 'package:quiz/models/subtask_data.dart';
 
 class KanbanController extends GetxController {
-  final ApiClient _apiClient = ApiClient();
+  final _collection = FirebaseFirestore.instance.collection('tasks');
+  StreamSubscription<QuerySnapshot>? _subscription;
 
-  final RxList<Task> tasks = <Task>[].obs;
-  final RxBool isLoading = false.obs;
+  final RxList<Subtask> tasks = <Subtask>[].obs;
+  final RxBool isLoading = true.obs;
 
   static const List<String> statuses = ['todo', 'inProgress', 'done'];
   static const Map<String, String> columnLabels = {
@@ -16,63 +18,63 @@ class KanbanController extends GetxController {
     'done': 'Done',
   };
 
-  List<Task> tasksFor(String status) =>
+  List<Subtask> tasksFor(String status) =>
       tasks.where((t) => t.status == status).toList();
 
   @override
   void onInit() {
     super.onInit();
-    fetchTasks();
-  }
-
-  Future<void> fetchTasks() async {
-    isLoading.value = true;
-    try {
-      final data = await _apiClient.getTasks();
-      tasks.value =
-          data.map((j) => Task.fromJson(j as Map<String, dynamic>)).toList();
-    } catch (e) {
-      _showError(e);
-    } finally {
-      isLoading.value = false;
-    }
+    _subscription = _collection.snapshots().listen(
+      (snapshot) {
+        tasks.value = snapshot.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return Subtask.fromJson(data);
+        }).toList();
+        isLoading.value = false;
+      },
+      onError: (e) {
+        _showError(e);
+        isLoading.value = false;
+      },
+    );
   }
 
   Future<void> addTask(String title) async {
     try {
-      final data = await _apiClient.createTask(title);
-      tasks.add(Task.fromJson(data));
+      await _collection.add({
+        'title': title,
+        'status': 'todo',
+        'date': DateTime.now().toIso8601String(),
+      });
     } catch (e) {
       _showError(e);
     }
   }
 
-  Future<void> moveForward(Task task) async {
+  Future<void> moveForward(Subtask task) async {
     final idx = statuses.indexOf(task.status);
     if (idx >= statuses.length - 1) return;
     await _updateStatus(task, statuses[idx + 1]);
   }
 
-  Future<void> moveBack(Task task) async {
+  Future<void> moveBack(Subtask task) async {
     final idx = statuses.indexOf(task.status);
     if (idx <= 0) return;
     await _updateStatus(task, statuses[idx - 1]);
   }
 
-  Future<void> deleteTask(Task task) async {
+  Future<void> deleteTask(Subtask task) async {
     try {
-      await _apiClient.deleteTask(task.id);
-      tasks.removeWhere((t) => t.id == task.id);
+      await _collection.doc(task.id).delete();
     } catch (e) {
       _showError(e);
     }
   }
 
-  Future<void> _updateStatus(Task task, String newStatus) async {
+  Future<void> _updateStatus(Subtask task, String newStatus) async {
     try {
-      await _apiClient.updateTask(task.id, newStatus);
-      final idx = tasks.indexWhere((t) => t.id == task.id);
-      if (idx != -1) tasks[idx] = task.copyWith(status: newStatus);
+      await _collection.doc(task.id).update({'status': newStatus});
     } catch (e) {
       _showError(e);
     }
@@ -90,7 +92,7 @@ class KanbanController extends GetxController {
 
   @override
   void onClose() {
-    _apiClient.close();
+    _subscription?.cancel();
     super.onClose();
   }
 }

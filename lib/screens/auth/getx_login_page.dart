@@ -30,11 +30,12 @@ class LoginScreenGetX extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
                 TextField(
-                  controller: controller.usernameController,
+                  controller: controller.emailController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: fieldDecoration(
-                    label: 'Username',
-                    hint: 'Enter your username',
-                    prefix: Icons.person_outline,
+                    label: 'Email',
+                    hint: 'Enter your email',
+                    prefix: Icons.email_outlined,
                   ),
                 ),
                 const SizedBox(height: 16),

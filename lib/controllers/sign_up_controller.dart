@@ -1,9 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:quiz/services/auth_service.dart';
-import '../services/api_client.dart';
-import '../screens/auth/getx_login_page.dart';
+import 'package:quiz/screens/auth/getx_login_page.dart';
 import 'package:quiz/screens/kanban/kanban_screen.dart';
+import 'package:quiz/services/auth_service.dart';
 
 class SignUpController extends GetxController {
   final TextEditingController usernameController = TextEditingController();
@@ -11,17 +11,14 @@ class SignUpController extends GetxController {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmController  = TextEditingController();
 
-  final ApiClient _apiClient = ApiClient();
+  final RxBool    isLoading     = false.obs;
+  final RxBool    isVisible     = false.obs;
+  final RxnString emailError    = RxnString();
+  final RxnString confirmError  = RxnString();
+  final RxnString generalError  = RxnString();
 
-  final RxBool  isLoading      = false.obs;
-  final RxBool  isVisible      = false.obs;
-  final RxnString emailError   = RxnString();   
-  final RxnString confirmError = RxnString();
-  final RxnString generalError = RxnString();
-
-  bool _isValidEmail(String email) {
-    return RegExp(r'^[\w\.\-]+@([\w\-]+\.)+[a-zA-Z]{2,}$').hasMatch(email);
-  }
+  bool _isValidEmail(String email) =>
+      RegExp(r'^[\w\.\-]+@([\w\-]+\.)+[a-zA-Z]{2,}$').hasMatch(email);
 
   void onEmailChanged(String value) {
     if (value.isEmpty) {
@@ -34,27 +31,20 @@ class SignUpController extends GetxController {
   }
 
   void onConfirmChanged(String value) {
-    if (value != passwordController.text) {
-      confirmError.value = 'Passwords do not match';
-    } else {
-      confirmError.value = null;
-    }
+    confirmError.value =
+        value != passwordController.text ? 'Passwords do not match' : null;
   }
 
   void toggleVisibility() => isVisible.value = !isVisible.value;
 
-
   Future<void> handleGoogleSignUp() async {
-    isLoading.value = true;         
-
+    isLoading.value = true;
     try {
       final user = await AuthService.signInWithGoogle();
-
-      if (user == null) return;     
-
+      if (user == null) return;
       Get.off(() => KanbanScreen());
     } catch (e) {
-      Get.snackbar(                
+      Get.snackbar(
         'Google Sign Up Failed',
         e.toString(),
         snackPosition: SnackPosition.BOTTOM,
@@ -62,11 +52,9 @@ class SignUpController extends GetxController {
         colorText: Colors.white,
       );
     } finally {
-      isLoading.value = false;      
+      isLoading.value = false;
     }
   }
-
-
 
   Future<void> signUp() async {
     final username = usernameController.text.trim();
@@ -91,30 +79,23 @@ class SignUpController extends GetxController {
     isLoading.value = true;
 
     try {
-      await _apiClient.signUp(
-        username: username,
-        email: email,
-        password: password,
-      );
+      final credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+      await credential.user?.updateDisplayName(username);
       Get.off(() => KanbanScreen());
+    } on FirebaseAuthException catch (e) {
+      generalError.value = e.message ?? 'Sign up failed';
     } catch (e) {
-      Get.snackbar(
-        'Sign Up Failed',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withValues(alpha: 0.8),
-        colorText: Colors.white,
-      );
+      generalError.value = e.toString();
     } finally {
       isLoading.value = false;
     }
   }
-  
+
   void handleSignIn() => Get.off(() => LoginScreenGetX());
 
   @override
   void onClose() {
-    _apiClient.close();
     usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
