@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:quiz/models/column_data.dart';
 import 'package:quiz/models/kanban_column_data.dart';
+import 'package:quiz/models/subtask_data.dart';
 import 'package:quiz/widgets/task_card_widget.dart';
 
 class MyTaskList extends StatefulWidget {
   final KanbanColumnData columnData;
-  final void Function(int index) onDelete;
+  final List<ColumnData> columns;
+  final void Function(Subtask task) onDelete;
+  final void Function(Subtask updated) onUpdate;
 
   const MyTaskList({
     super.key,
     required this.columnData,
+    required this.columns,
     required this.onDelete,
+    required this.onUpdate,
   });
 
   @override
@@ -25,8 +31,9 @@ class _MyTaskListState extends State<MyTaskList> {
         padding: const EdgeInsets.all(8),
         itemCount: widget.columnData.tasks.length,
         itemBuilder: (context, index) {
+          final task = widget.columnData.tasks[index];
           return Dismissible(
-            key: UniqueKey(),
+            key: ValueKey(task.id),
             direction: DismissDirection.endToStart,
             background: Container(
               color: Colors.red,
@@ -35,28 +42,24 @@ class _MyTaskListState extends State<MyTaskList> {
               child: const Icon(Icons.delete, color: Colors.white),
             ),
             confirmDismiss: (direction) async {
-              bool deleteConfirmed = false;
-
+              bool confirmed = false;
               await AwesomeDialog(
                 context: context,
                 dialogType: DialogType.warning,
                 animType: AnimType.bottomSlide,
                 title: 'Delete Task',
                 desc: 'Are you sure you want to delete this task?',
-                btnCancelOnPress: () {
-                  deleteConfirmed = false;
-                },
-                btnOkOnPress: () {
-                  deleteConfirmed = true;
-                },
+                btnCancelOnPress: () => confirmed = false,
+                btnOkOnPress: () => confirmed = true,
               ).show();
-
-              return deleteConfirmed;
+              return confirmed;
             },
-            onDismissed: (direction) {
-              widget.onDelete(index);
-            },
-            child: TaskCardWidget(task: widget.columnData.tasks[index]),
+            onDismissed: (_) => widget.onDelete(task),
+            child: TaskCardWidget(
+              task: task,
+              columns: widget.columns,
+              onUpdate: widget.onUpdate,
+            ),
           );
         },
       ),

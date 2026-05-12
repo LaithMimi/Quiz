@@ -8,27 +8,24 @@ class KanbanScreen extends StatelessWidget {
 
   final KanbanController controller = Get.put(KanbanController());
 
-  void _showAddDialog() {
-    final titleController = TextEditingController();
+  void _showAddColumnDialog() {
+    final labelController = TextEditingController();
     Get.dialog(
       AlertDialog(
-        title: const Text('New Task'),
+        title: const Text('New Column'),
         content: TextField(
-          controller: titleController,
+          controller: labelController,
           autofocus: true,
           decoration: const InputDecoration(
-            hintText: 'Task title',
+            hintText: 'Column name',
             border: OutlineInputBorder(),
           ),
-          onSubmitted: (_) => _submitAdd(titleController),
+          onSubmitted: (_) => _submitAddColumn(labelController),
         ),
         actions: [
-          TextButton(
-            onPressed: Get.back,
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: Get.back, child: const Text('Cancel')),
           ElevatedButton(
-            onPressed: () => _submitAdd(titleController),
+            onPressed: () => _submitAddColumn(labelController),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(255, 14, 66, 109),
               foregroundColor: Colors.white,
@@ -40,10 +37,10 @@ class KanbanScreen extends StatelessWidget {
     );
   }
 
-  void _submitAdd(TextEditingController titleController) {
-    final title = titleController.text.trim();
-    if (title.isNotEmpty) {
-      controller.addTask(title);
+  void _submitAddColumn(TextEditingController labelController) {
+    final label = labelController.text.trim();
+    if (label.isNotEmpty) {
+      controller.addColumn(label);
       Get.back();
     }
   }
@@ -58,23 +55,29 @@ class KanbanScreen extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddDialog,
+        onPressed: _showAddColumnDialog,
         backgroundColor: const Color.fromARGB(255, 14, 66, 109),
         foregroundColor: Colors.white,
+        tooltip: 'Add column',
         child: const Icon(Icons.add),
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
+        if (controller.columns.isEmpty) {
+          return Center(
+            child: Text(
+              'No columns yet.\nTap + to add one.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
+            ),
+          );
+        }
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: KanbanController.statuses
-              .map((status) => KanbanColumn(
-                    status: status,
-                    label: KanbanController.columnLabels[status]!,
-                    controller: controller,
-                  ))
+          children: controller.columns
+              .map((col) => KanbanColumn(key: ValueKey(col.id), column: col, controller: controller))
               .toList(),
         );
       }),

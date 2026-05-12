@@ -1,36 +1,48 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:quiz/models/column_data.dart';
 import 'package:quiz/models/subtask_data.dart';
 
 class KanbanController extends GetxController {
-  final _collection = FirebaseFirestore.instance.collection('tasks');
-  StreamSubscription<QuerySnapshot>? _subscription;
+  final _db   = FirebaseDatabase.instance;
+  final _auth = FirebaseAuth.instance;
 
-  final RxList<Subtask> tasks = <Subtask>[].obs;
+  StreamSubscription<DatabaseEvent>? _tasksSub;
+  StreamSubscription<DatabaseEvent>? _columnsSub;
+
+  final RxList<Subtask>    tasks   = <Subtask>[].obs;
+  final RxList<ColumnData> columns = <ColumnData>[].obs;
   final RxBool isLoading = true.obs;
 
-  static const List<String> statuses = ['todo', 'inProgress', 'done'];
-  static const Map<String, String> columnLabels = {
-    'todo': 'To Do',
-    'inProgress': 'In Progress',
-    'done': 'Done',
-  };
+  String get _uid => _auth.currentUser!.uid;
 
-  List<Subtask> tasksFor(String status) =>
-      tasks.where((t) => t.status == status).toList();
+  DatabaseReference get _tasksRef   => _db.ref('users/$_uid/tasks');
+  DatabaseReference get _columnsRef => _db.ref('users/$_uid/columns');
+
+  List<Subtask> tasksFor(String columnId) =>
+      tasks.where((t) => t.columnId == columnId).toList();
 
   @override
   void onInit() {
     super.onInit();
-    _subscription = _collection.snapshots().listen(
-      (snapshot) {
-        tasks.value = snapshot.docs.map((doc) {
-          final data = doc.data();
-          data['id'] = doc.id;
-          return Subtask.fromJson(data);
-        }).toList();
+
+    _columnsSub = _columnsRef.orderByChild('order').onValue.listen(
+      (event) {
+        final data = event.snapshot.value;
+        if (data == null) {
+          columns.value = [];
+        } else {
+          final map = Map<String, dynamic>.from(data as Map);
+          columns.value = map.entries.map((e) {
+            final col = Map<String, dynamic>.from(e.value as Map);
+            col['id'] = e.key;
+            return ColumnData.fromJson(col);
+          }).toList()
+            ..sort((a, b) => a.order.compareTo(b.order));
+        }
         isLoading.value = false;
       },
       onError: (e) {
@@ -38,13 +50,38 @@ class KanbanController extends GetxController {
         isLoading.value = false;
       },
     );
+
+    _tasksSub = _tasksRef.onValue.listen(
+      (event) {
+        final data = event.snapshot.value;
+        if (data == null) {
+          tasks.value = [];
+        } else {
+          final map = Map<String, dynamic>.from(data as Map);
+          tasks.value = map.entries.map((e) {
+            final task = Map<String, dynamic>.from(e.value as Map);
+            task['id'] = e.key;
+            return Subtask.fromJson(task);
+          }).toList();
+        }
+      },
+      onError: _showError,
+    );
   }
 
-  Future<void> addTask(String title) async {
+  Future<void> addColumn(String label) async {
     try {
-      await _collection.add({
+      await _columnsRef.push().set({'label': label, 'order': columns.length});
+    } catch (e) {
+      _showError(e);
+    }
+  }
+
+  Future<void> addTask(String title, String columnId) async {
+    try {
+      await _tasksRef.push().set({
         'title': title,
-        'status': 'todo',
+        'columnId': columnId,
         'date': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -52,29 +89,18 @@ class KanbanController extends GetxController {
     }
   }
 
-  Future<void> moveForward(Subtask task) async {
-    final idx = statuses.indexOf(task.status);
-    if (idx >= statuses.length - 1) return;
-    await _updateStatus(task, statuses[idx + 1]);
-  }
-
-  Future<void> moveBack(Subtask task) async {
-    final idx = statuses.indexOf(task.status);
-    if (idx <= 0) return;
-    await _updateStatus(task, statuses[idx - 1]);
-  }
-
-  Future<void> deleteTask(Subtask task) async {
+  Future<void> updateTask(Subtask task) async {
     try {
-      await _collection.doc(task.id).delete();
+      final data = task.toJson()..remove('id');
+      await _tasksRef.child(task.id).update(data);
     } catch (e) {
       _showError(e);
     }
   }
 
-  Future<void> _updateStatus(Subtask task, String newStatus) async {
+  Future<void> deleteTask(Subtask task) async {
     try {
-      await _collection.doc(task.id).update({'status': newStatus});
+      await _tasksRef.child(task.id).remove();
     } catch (e) {
       _showError(e);
     }
@@ -92,7 +118,8 @@ class KanbanController extends GetxController {
 
   @override
   void onClose() {
-    _subscription?.cancel();
+    _tasksSub?.cancel();
+    _columnsSub?.cancel();
     super.onClose();
   }
 }

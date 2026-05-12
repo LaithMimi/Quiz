@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quiz/screens/auth/getx_login_page.dart';
@@ -81,7 +82,14 @@ class SignUpController extends GetxController {
     try {
       final credential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
-      await credential.user?.updateDisplayName(username);
+      final user = credential.user!;
+      await user.updateDisplayName(username);
+      await FirebaseDatabase.instance.ref('users/${user.uid}/profile').set({
+        'uid': user.uid,
+        'username': username,
+        'email': email,
+        'createdAt': ServerValue.timestamp,
+      });
       Get.off(() => KanbanScreen());
     } on FirebaseAuthException catch (e) {
       generalError.value = e.message ?? 'Sign up failed';

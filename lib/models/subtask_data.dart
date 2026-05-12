@@ -1,7 +1,7 @@
 class Subtask {
   final String id;
   final String title;
-  final String status;
+  final String columnId;
   final String username;
   final DateTime date;
   final DateTime? duedate;
@@ -12,7 +12,7 @@ class Subtask {
   const Subtask({
     required this.id,
     required this.title,
-    required this.status,
+    required this.columnId,
     this.username = '',
     required this.date,
     this.duedate,
@@ -24,7 +24,7 @@ class Subtask {
   factory Subtask.fromJson(Map<String, dynamic> json) => Subtask(
         id: json['id'].toString(),
         title: json['title'] as String,
-        status: json['status'] as String,
+        columnId: json['columnId'] as String? ?? '',
         username: json['username'] as String? ?? '',
         date: json['date'] != null
             ? DateTime.parse(json['date'] as String)
@@ -40,7 +40,7 @@ class Subtask {
   Map<String, dynamic> toJson() => {
         'id': id,
         'title': title,
-        'status': status,
+        'columnId': columnId,
         'username': username,
         'date': date.toIso8601String(),
         if (duedate != null) 'duedate': duedate!.toIso8601String(),
@@ -49,15 +49,25 @@ class Subtask {
         if (techstack != null) 'techstack': techstack,
       };
 
-  Subtask copyWith({String? status}) => Subtask(
+  Subtask copyWith({
+    String? title,
+    String? columnId,
+    String? username,
+    DateTime? date,
+    DateTime? duedate,
+    String? description,
+    String? goal,
+    String? techstack,
+  }) =>
+      Subtask(
         id: id,
-        title: title,
-        status: status ?? this.status,
-        username: username,
-        date: date,
-        duedate: duedate,
-        description: description,
-        goal: goal,
-        techstack: techstack,
+        title: title ?? this.title,
+        columnId: columnId ?? this.columnId,
+        username: username ?? this.username,
+        date: date ?? this.date,
+        duedate: duedate ?? this.duedate,
+        description: description ?? this.description,
+        goal: goal ?? this.goal,
+        techstack: techstack ?? this.techstack,
       );
 }
