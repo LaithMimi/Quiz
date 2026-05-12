@@ -1,17 +1,17 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quiz/models/column_data.dart';
 import 'package:quiz/models/subtask_data.dart';
 
 class KanbanController extends GetxController {
-  final _db   = FirebaseDatabase.instance;
+  final _db   = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
 
-  StreamSubscription<DatabaseEvent>? _tasksSub;
-  StreamSubscription<DatabaseEvent>? _columnsSub;
+  StreamSubscription<QuerySnapshot>? _tasksSub;
+  StreamSubscription<QuerySnapshot>? _columnsSub;
 
   final RxList<Subtask>    tasks   = <Subtask>[].obs;
   final RxList<ColumnData> columns = <ColumnData>[].obs;
@@ -19,8 +19,11 @@ class KanbanController extends GetxController {
 
   String get _uid => _auth.currentUser!.uid;
 
-  DatabaseReference get _tasksRef   => _db.ref('users/$_uid/tasks');
-  DatabaseReference get _columnsRef => _db.ref('users/$_uid/columns');
+  CollectionReference<Map<String, dynamic>> get _tasksCol =>
+      _db.collection('users').doc(_uid).collection('tasks');
+
+  CollectionReference<Map<String, dynamic>> get _columnsCol =>
+      _db.collection('users').doc(_uid).collection('columns');
 
   List<Subtask> tasksFor(String columnId) =>
       tasks.where((t) => t.columnId == columnId).toList();
@@ -29,20 +32,13 @@ class KanbanController extends GetxController {
   void onInit() {
     super.onInit();
 
-    _columnsSub = _columnsRef.orderByChild('order').onValue.listen(
-      (event) {
-        final data = event.snapshot.value;
-        if (data == null) {
-          columns.value = [];
-        } else {
-          final map = Map<String, dynamic>.from(data as Map);
-          columns.value = map.entries.map((e) {
-            final col = Map<String, dynamic>.from(e.value as Map);
-            col['id'] = e.key;
-            return ColumnData.fromJson(col);
-          }).toList()
-            ..sort((a, b) => a.order.compareTo(b.order));
-        }
+    _columnsSub = _columnsCol.orderBy('order').snapshots().listen(
+      (snap) {
+        columns.value = snap.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return ColumnData.fromJson(data);
+        }).toList();
         isLoading.value = false;
       },
       onError: (e) {
@@ -51,19 +47,13 @@ class KanbanController extends GetxController {
       },
     );
 
-    _tasksSub = _tasksRef.onValue.listen(
-      (event) {
-        final data = event.snapshot.value;
-        if (data == null) {
-          tasks.value = [];
-        } else {
-          final map = Map<String, dynamic>.from(data as Map);
-          tasks.value = map.entries.map((e) {
-            final task = Map<String, dynamic>.from(e.value as Map);
-            task['id'] = e.key;
-            return Subtask.fromJson(task);
-          }).toList();
-        }
+    _tasksSub = _tasksCol.snapshots().listen(
+      (snap) {
+        tasks.value = snap.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return Subtask.fromJson(data);
+        }).toList();
       },
       onError: _showError,
     );
@@ -71,7 +61,7 @@ class KanbanController extends GetxController {
 
   Future<void> addColumn(String label) async {
     try {
-      await _columnsRef.push().set({'label': label, 'order': columns.length});
+      await _columnsCol.add({'label': label, 'order': columns.length});
     } catch (e) {
       _showError(e);
     }
@@ -79,7 +69,7 @@ class KanbanController extends GetxController {
 
   Future<void> addTask(String title, String columnId) async {
     try {
-      await _tasksRef.push().set({
+      await _tasksCol.add({
         'title': title,
         'columnId': columnId,
         'date': DateTime.now().toIso8601String(),
@@ -92,7 +82,7 @@ class KanbanController extends GetxController {
   Future<void> updateTask(Subtask task) async {
     try {
       final data = task.toJson()..remove('id');
-      await _tasksRef.child(task.id).update(data);
+      await _tasksCol.doc(task.id).update(data);
     } catch (e) {
       _showError(e);
     }
@@ -100,7 +90,7 @@ class KanbanController extends GetxController {
 
   Future<void> deleteTask(Subtask task) async {
     try {
-      await _tasksRef.child(task.id).remove();
+      await _tasksCol.doc(task.id).delete();
     } catch (e) {
       _showError(e);
     }
