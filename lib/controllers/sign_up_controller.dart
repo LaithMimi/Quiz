@@ -1,5 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quiz/screens/auth/getx_login_page.dart';
@@ -84,11 +84,11 @@ class SignUpController extends GetxController {
           .createUserWithEmailAndPassword(email: email, password: password);
       final user = credential.user!;
       await user.updateDisplayName(username);
-      await FirebaseDatabase.instance.ref('users/${user.uid}/profile').set({
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'uid': user.uid,
         'username': username,
         'email': email,
-        'createdAt': ServerValue.timestamp,
+        'createdAt': FieldValue.serverTimestamp(),
       });
       Get.off(() => KanbanScreen());
     } on FirebaseAuthException catch (e) {
