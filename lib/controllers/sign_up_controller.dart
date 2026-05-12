@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quiz/services/auth_service.dart';
 import '../services/api_client.dart';
+import '../screens/auth/getx_login_page.dart';
+import 'package:quiz/screens/kanban/kanban_screen.dart';
 
 class SignUpController extends GetxController {
   final TextEditingController usernameController = TextEditingController();
@@ -50,9 +52,9 @@ class SignUpController extends GetxController {
 
       if (user == null) return;     
 
-      Get.offNamed('/home');
+      Get.off(() => KanbanScreen());
     } catch (e) {
-      Get.snackbar(
+      Get.snackbar(                
         'Google Sign Up Failed',
         e.toString(),
         snackPosition: SnackPosition.BOTTOM,
@@ -94,7 +96,7 @@ class SignUpController extends GetxController {
         email: email,
         password: password,
       );
-      Get.offNamed('/home');
+      Get.off(() => KanbanScreen());
     } catch (e) {
       Get.snackbar(
         'Sign Up Failed',
@@ -108,7 +110,7 @@ class SignUpController extends GetxController {
     }
   }
   
-  void handleSignIn() => Get.offNamed('/login');
+  void handleSignIn() => Get.off(() => LoginScreenGetX());
 
   @override
   void onClose() {
