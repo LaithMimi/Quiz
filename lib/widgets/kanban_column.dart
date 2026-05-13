@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quiz/controllers/kanban_controller.dart';
 import 'package:quiz/models/column_data.dart';
-import 'package:quiz/models/subtask_data.dart';
+import 'package:quiz/models/task_data.dart';
 import 'package:quiz/widgets/my_task_list.dart';
 
 // A list of colors to cycle through for the column headers
@@ -110,7 +110,7 @@ class KanbanColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      List<Subtask> tasks = controller.tasksFor(column.id);
+      List<Task> tasks = controller.tasksFor(column.id);
 
       return SizedBox(
         width: 300,
