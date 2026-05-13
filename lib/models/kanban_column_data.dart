@@ -1,8 +1,8 @@
-import 'package:quiz/models/subtask_data.dart';
+import 'package:quiz/models/task_data.dart';
 
 class KanbanColumnData {
   final String label;
-  final List<Subtask> tasks;
+  final List<Task> tasks;
 
   KanbanColumnData({required this.label, required this.tasks});
 }

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:quiz/models/column_data.dart';
 import 'package:quiz/models/kanban_column_data.dart';
-import 'package:quiz/models/subtask_data.dart';
+import 'package:quiz/models/task_data.dart';
 import 'package:quiz/widgets/task_card_widget.dart';
 
 class MyTaskList extends StatefulWidget {
   final KanbanColumnData columnData;
   final List<ColumnData> columns;
-  final void Function(Subtask task) onDelete;
-  final void Function(Subtask updated) onUpdate;
+  final void Function(Task task) onDelete;
+  final void Function(Task updated) onUpdate;
 
   const MyTaskList({
     super.key,
