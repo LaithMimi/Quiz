@@ -126,7 +126,6 @@ class KanbanController extends GetxController {
     try {
       Map<String, dynamic> data = task.toJson();
       data.remove('id'); // The Firestore document ID is not stored as a field
-
       await _tasksCol.doc(task.id).update(data);
     } catch (e) {
       showError(e);

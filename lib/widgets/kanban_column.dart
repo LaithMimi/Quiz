@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quiz/controllers/kanban_controller.dart';
 import 'package:quiz/models/column_data.dart';
-import 'package:quiz/models/kanban_column_data.dart';
 import 'package:quiz/models/subtask_data.dart';
 import 'package:quiz/widgets/my_task_list.dart';
 
@@ -219,7 +218,7 @@ class KanbanColumn extends StatelessWidget {
                 )
               else
                 MyTaskList(
-                  columnData: KanbanColumnData(label: column.label, tasks: tasks),
+                  tasks: tasks,
                   columns: controller.columns,
                   onDelete: controller.deleteTask,
                   onUpdate: controller.updateTask,
