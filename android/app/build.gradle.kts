@@ -10,6 +10,7 @@ android {
     namespace = "com.example.quiz"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
+    buildToolsVersion = "35.0.0"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

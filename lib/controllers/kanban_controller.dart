@@ -173,6 +173,7 @@ class KanbanController extends GetxController {
 
         Map<String, dynamic> firestoreData = {
           'title': taskData['title'] ?? 'Untitled Task',
+          'description': taskData['description'] ?? '',
           'columnId': columnId,
           'date': DateTime.now().toIso8601String(),
         };
