@@ -6,8 +6,9 @@ class Task {
   final DateTime date;
   final DateTime? duedate;
   final String? description;
-  final String? sharedWith; // email this task was assigned to
-  final String? sharedBy;   // email of who assigned this task
+  final String? sharedWith;
+  final String? sharedBy;
+  final bool isCompleted;
 
   const Task({
     required this.id,
@@ -19,9 +20,9 @@ class Task {
     this.description,
     this.sharedWith,
     this.sharedBy,
+    this.isCompleted = false,
   });
 
-  //converting a Map from Firestore into a Task object
   factory Task.fromJson(Map<String, dynamic> json) {
     String id = json['id'].toString();
     String title = json['title'] as String;
@@ -43,6 +44,7 @@ class Task {
     String? description = json['description'] as String?;
     String? sharedWith = json['sharedWith'] as String?;
     String? sharedBy = json['sharedBy'] as String?;
+    bool isCompleted = json['isCompleted'] as bool? ?? false;
 
     return Task(
       id: id,
@@ -54,10 +56,10 @@ class Task {
       description: description,
       sharedWith: sharedWith,
       sharedBy: sharedBy,
+      isCompleted: isCompleted,
     );
   }
 
-  // Convert a Subtask into a Map so we can save it to Firestore
   Map<String, dynamic> toJson() {
     Map<String, dynamic> data = {
       'id': id,
@@ -65,6 +67,7 @@ class Task {
       'columnId': columnId,
       'username': username,
       'date': date.toIso8601String(),
+      'isCompleted': isCompleted,
     };
 
     if (duedate != null) {
@@ -83,7 +86,6 @@ class Task {
     return data;
   }
 
-  // Create a copy of this task with some fields changed
   Task copyWith({
     String? title,
     String? columnId,
@@ -93,6 +95,7 @@ class Task {
     String? description,
     String? sharedWith,
     String? sharedBy,
+    bool? isCompleted,
   }) {
     return Task(
       id: id,
@@ -104,6 +107,7 @@ class Task {
       description: description ?? this.description,
       sharedWith: sharedWith ?? this.sharedWith,
       sharedBy: sharedBy ?? this.sharedBy,
+      isCompleted: isCompleted ?? this.isCompleted,
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
@@ -9,13 +10,8 @@ import 'package:quiz/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  //loading the .env file so API keys are available throughout the app
   await dotenv.load(fileName: '.env');
-
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -24,9 +20,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Skip login screen if the user already has an active session
+    String initialRoute =
+        FirebaseAuth.instance.currentUser != null ? '/home' : '/login';
+
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login',
+      initialRoute: initialRoute,
       getPages: [
         GetPage(name: '/signup', page: () => SignUpScreenGetX()),
         GetPage(name: '/login', page: () => LoginScreenGetX()),

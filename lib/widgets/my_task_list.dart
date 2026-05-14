@@ -4,7 +4,7 @@ import 'package:quiz/models/column_data.dart';
 import 'package:quiz/models/task_data.dart';
 import 'package:quiz/widgets/task_card_widget.dart';
 
-class MyTaskList extends StatefulWidget {
+class MyTaskList extends StatelessWidget {
   final List<Task> tasks;
   final List<ColumnData> columns;
   final void Function(Task task) onDelete;
@@ -19,49 +19,71 @@ class MyTaskList extends StatefulWidget {
   });
 
   @override
-  State<MyTaskList> createState() => _MyTaskListState();
-}
-
-class _MyTaskListState extends State<MyTaskList> {
-  @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: ListView.builder(
-        padding: const EdgeInsets.all(8),
-        itemCount: widget.tasks.length,
-        itemBuilder: (context, index) {
-          final task = widget.tasks[index];
-          return Dismissible(
-            key: ValueKey(task.id),
-            direction: DismissDirection.endToStart,
-            background: Container(
-              color: Colors.red,
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: const Icon(Icons.delete, color: Colors.white),
+    return ListView.builder(
+      padding: const EdgeInsets.all(8),
+      itemCount: tasks.length,
+      itemBuilder: (BuildContext context, int index) {
+        final Task task = tasks[index];
+
+        return Dismissible(
+          key: ValueKey(task.id),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: const Icon(Icons.delete, color: Colors.white),
+          ),
+          confirmDismiss: (DismissDirection direction) async {
+            bool confirmed = false;
+            await AwesomeDialog(
+              context: context,
+              dialogType: DialogType.warning,
+              animType: AnimType.bottomSlide,
+              title: 'Delete Task',
+              desc: 'Are you sure you want to delete this task?',
+              btnCancelOnPress: () => confirmed = false,
+              btnOkOnPress: () => confirmed = true,
+            ).show();
+            return confirmed;
+          },
+          onDismissed: (_) => onDelete(task),
+          child: LongPressDraggable<Task>(
+            data: task,
+            delay: const Duration(milliseconds: 250),
+            feedback: Material(
+              elevation: 8,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 240,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF6B4EFF).withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  task.title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    decoration: TextDecoration.none,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ),
-            confirmDismiss: (direction) async {
-              bool confirmed = false;
-              await AwesomeDialog(
-                context: context,
-                dialogType: DialogType.warning,
-                animType: AnimType.bottomSlide,
-                title: 'Delete Task',
-                desc: 'Are you sure you want to delete this task?',
-                btnCancelOnPress: () => confirmed = false,
-                btnOkOnPress: () => confirmed = true,
-              ).show();
-              return confirmed;
-            },
-            onDismissed: (_) => widget.onDelete(task),
-            child: TaskCardWidget(
-              task: task,
-              columns: widget.columns,
-              onUpdate: widget.onUpdate,
+            childWhenDragging: Opacity(
+              opacity: 0.3,
+              child: TaskCardWidget(task: task, columns: columns, onUpdate: onUpdate),
             ),
-          );
-        },
-      ),
+            child: TaskCardWidget(task: task, columns: columns, onUpdate: onUpdate),
+          ),
+        );
+      },
     );
   }
 }

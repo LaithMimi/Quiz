@@ -5,7 +5,6 @@ import 'package:quiz/models/column_data.dart';
 import 'package:quiz/models/task_data.dart';
 import 'package:quiz/widgets/my_task_list.dart';
 
-// A list of colors to cycle through for the column headers
 const List<Color> _columnColors = [
   Color.fromARGB(255, 14, 66, 109),
   Color(0xFF2E7D32),
@@ -25,13 +24,8 @@ class KanbanColumn extends StatelessWidget {
   final ColumnData column;
   final KanbanController controller;
 
-  // Pick a header color based on the column's position in the board
-  Color get _headerColor {
-    int index = column.order % _columnColors.length;
-    return _columnColors[index];
-  }
+  Color get _headerColor => _columnColors[column.order % _columnColors.length];
 
-  // Show a dialog asking the user to confirm before deleting the column
   void _showDeleteColumnDialog() {
     Get.dialog(
       AlertDialog(
@@ -40,10 +34,7 @@ class KanbanColumn extends StatelessWidget {
           'This will permanently delete the column and all its tasks.',
         ),
         actions: [
-          TextButton(
-            onPressed: Get.back,
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: Get.back, child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               Get.back();
@@ -60,7 +51,6 @@ class KanbanColumn extends StatelessWidget {
     );
   }
 
-  // Show a dialog that lets the user type a title for a new task
   void _showAddTaskDialog() {
     TextEditingController titleController = TextEditingController();
 
@@ -74,19 +64,12 @@ class KanbanColumn extends StatelessWidget {
             hintText: 'Task title',
             border: OutlineInputBorder(),
           ),
-          onSubmitted: (String value) {
-            _submitAddTask(titleController);
-          },
+          onSubmitted: (_) => _submitAddTask(titleController),
         ),
         actions: [
-          TextButton(
-            onPressed: Get.back,
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: Get.back, child: const Text('Cancel')),
           ElevatedButton(
-            onPressed: () {
-              _submitAddTask(titleController);
-            },
+            onPressed: () => _submitAddTask(titleController),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(255, 14, 66, 109),
               foregroundColor: Colors.white,
@@ -98,11 +81,10 @@ class KanbanColumn extends StatelessWidget {
     );
   }
 
-  // Add the task if the title is not empty, then close the dialog
   void _submitAddTask(TextEditingController titleController) {
-    String title = titleController.text.trim();
-    if (title.isNotEmpty) {
-      controller.addTask(title, column.id);
+    String label = titleController.text.trim();
+    if (label.isNotEmpty) {
+      controller.addTask(label, column.id);
       Get.back();
     }
   }
@@ -111,6 +93,7 @@ class KanbanColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       List<Task> tasks = controller.tasksFor(column.id);
+      int overdueCount = controller.overdueCountFor(column.id);
 
       return SizedBox(
         width: 300,
@@ -129,19 +112,16 @@ class KanbanColumn extends StatelessWidget {
           ),
           child: Column(
             children: [
-              // Column header bar with label, task count, add, and delete buttons
+              // Header
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: _headerColor,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                 ),
                 child: Row(
                   children: [
-                    // Column name
                     Expanded(
                       child: Text(
                         column.label,
@@ -167,9 +147,24 @@ class KanbanColumn extends StatelessWidget {
                       ),
                     ),
 
+                    // Overdue badge
+                    if (overdueCount > 0) ...[
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '$overdueCount overdue',
+                          style: const TextStyle(color: Colors.white, fontSize: 11),
+                        ),
+                      ),
+                    ],
+
                     const SizedBox(width: 8),
 
-                    // Add task button
                     GestureDetector(
                       onTap: _showAddTaskDialog,
                       child: Container(
@@ -185,7 +180,6 @@ class KanbanColumn extends StatelessWidget {
 
                     const SizedBox(width: 6),
 
-                    // Delete column button
                     GestureDetector(
                       onTap: _showDeleteColumnDialog,
                       child: Container(
@@ -195,34 +189,62 @@ class KanbanColumn extends StatelessWidget {
                           color: Colors.white.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.white,
-                          size: 18,
-                        ),
+                        child: const Icon(Icons.delete_outline, color: Colors.white, size: 18),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // Show an empty message if there are no tasks, otherwise show the task list
-              if (tasks.isEmpty)
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      'No tasks',
-                      style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
-                    ),
-                  ),
-                )
-              else
-                MyTaskList(
-                  tasks: tasks,
-                  columns: controller.columns,
-                  onDelete: controller.deleteTask,
-                  onUpdate: controller.updateTask,
+              // Body — DragTarget covers empty space and the task list
+              Expanded(
+                child: DragTarget<Task>(
+                  onAcceptWithDetails: (DragTargetDetails<Task> details) {
+                    Task task = details.data;
+                    if (task.columnId != column.id) {
+                      controller.updateTask(task.copyWith(columnId: column.id));
+                    }
+                  },
+                  builder: (
+                    BuildContext context,
+                    List<Task?> candidateData,
+                    List<dynamic> rejectedData,
+                  ) {
+                    bool isDragOver = candidateData.isNotEmpty;
+
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: isDragOver
+                            ? const Color(0xFF6B4EFF).withValues(alpha: 0.05)
+                            : Colors.transparent,
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(12),
+                        ),
+                      ),
+                      child: tasks.isEmpty
+                          ? Center(
+                              child: Text(
+                                isDragOver ? 'Drop here' : 'No tasks',
+                                style: TextStyle(
+                                  color: isDragOver
+                                      ? const Color(0xFF6B4EFF)
+                                      : Colors.grey.shade400,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            )
+                          : MyTaskList(
+                              tasks: tasks,
+                              columns: controller.columns,
+                              onDelete: controller.deleteTask,
+                              onUpdate: controller.updateTask,
+                            ),
+                    );
+                  },
                 ),
+              ),
             ],
           ),
         ),

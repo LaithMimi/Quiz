@@ -9,63 +9,96 @@ import 'package:quiz/services/ai_service.dart';
 import 'package:quiz/services/user_service.dart';
 
 class KanbanController extends GetxController {
-  // Firebase instances
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Stream subscriptions to listen for real-time changes from Firestore
   StreamSubscription<QuerySnapshot>? _tasksSub;
   StreamSubscription<QuerySnapshot>? _columnsSub;
+  StreamSubscription<User?>? _authSub;
 
-  // Observable lists — the UI will automatically rebuild when these change
   final RxList<Task> tasks = <Task>[].obs;
   final RxList<ColumnData> columns = <ColumnData>[].obs;
   final RxBool isLoading = true.obs;
 
-  // Get the currently logged-in user's ID
-  String get _uid {
-    return _auth.currentUser!.uid;
-  }
+  // IDs of expanded task cards — persists across Obx rebuilds
+  final RxList<String> expandedIds = <String>[].obs;
 
-  // Reference to the current user's tasks collection in Firestore
-  CollectionReference<Map<String, dynamic>> get _tasksCol {
-    return _db.collection('users').doc(_uid).collection('tasks');
-  }
+  // Live search query — columns filter their task lists reactively
+  final RxString searchQuery = ''.obs;
 
-  // Reference to the current user's columns collection in Firestore
-  CollectionReference<Map<String, dynamic>> get _columnsCol {
-    return _db.collection('users').doc(_uid).collection('columns');
-  }
+  String get _uid => _auth.currentUser!.uid;
 
-  // Return only the tasks that belong to a specific column
+  CollectionReference<Map<String, dynamic>> get _tasksCol =>
+      _db.collection('users').doc(_uid).collection('tasks');
+
+  CollectionReference<Map<String, dynamic>> get _columnsCol =>
+      _db.collection('users').doc(_uid).collection('columns');
+
+  // Return tasks for a column, filtered by search and sorted (incomplete first)
   List<Task> tasksFor(String columnId) {
-    List<Task> columnTasks = [];
+    String query = searchQuery.value.toLowerCase().trim();
+    List<Task> result = [];
 
     for (Task task in tasks) {
-      if (task.columnId == columnId) {
-        columnTasks.add(task);
+      if (task.columnId != columnId) continue;
+      if (query.isNotEmpty) {
+        bool titleMatch = task.title.toLowerCase().contains(query);
+        bool descMatch = (task.description ?? '').toLowerCase().contains(query);
+        if (!titleMatch && !descMatch) continue;
       }
+      result.add(task);
     }
 
-    return columnTasks;
+    result.sort((Task a, Task b) {
+      if (a.isCompleted == b.isCompleted) return 0;
+      return a.isCompleted ? 1 : -1;
+    });
+
+    return result;
   }
+
+  // Count non-completed overdue tasks in a column for the header badge
+  int overdueCountFor(String columnId) {
+    DateTime now = DateTime.now();
+    int count = 0;
+    for (Task task in tasks) {
+      if (task.columnId == columnId && !task.isCompleted) {
+        DateTime? due = task.duedate;
+        if (due != null && due.isBefore(now)) count++;
+      }
+    }
+    return count;
+  }
+
+  void toggleExpanded(String taskId) {
+    if (expandedIds.contains(taskId)) {
+      expandedIds.remove(taskId);
+    } else {
+      expandedIds.add(taskId);
+    }
+  }
+
+  bool isTaskExpanded(String taskId) => expandedIds.contains(taskId);
 
   @override
   void onInit() {
     super.onInit();
 
-    // Listen to columns in Firestore and update the list when they change
+    // Auth guard: redirect to login if session ends
+    _authSub = _auth.authStateChanges().listen((User? user) {
+      if (user == null) {
+        Get.offAllNamed('/login');
+      }
+    });
+
     _columnsSub = _columnsCol.orderBy('order').snapshots().listen(
       (QuerySnapshot snap) {
         List<ColumnData> newColumns = [];
-
         for (QueryDocumentSnapshot doc in snap.docs) {
           Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
           data['id'] = doc.id;
-          ColumnData column = ColumnData.fromJson(data);
-          newColumns.add(column);
+          newColumns.add(ColumnData.fromJson(data));
         }
-
         columns.value = newColumns;
         isLoading.value = false;
       },
@@ -75,65 +108,61 @@ class KanbanController extends GetxController {
       },
     );
 
-    // Listen to tasks in Firestore and update the list when they change
     _tasksSub = _tasksCol.snapshots().listen(
       (QuerySnapshot snap) {
         List<Task> newTasks = [];
-
         for (QueryDocumentSnapshot doc in snap.docs) {
           Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
           data['id'] = doc.id;
-          Task task = Task.fromJson(data);
-          newTasks.add(task);
+          newTasks.add(Task.fromJson(data));
         }
-
         tasks.value = newTasks;
       },
       onError: showError,
     );
   }
 
-  // Add a new column to the board
   Future<void> addColumn(String label) async {
     try {
-      Map<String, dynamic> columnData = {
-        'label': label,
-        'order': columns.length,
-      };
-
-      await _columnsCol.add(columnData);
+      await _columnsCol.add({'label': label, 'order': columns.length});
     } catch (e) {
       showError(e);
     }
   }
 
-  // Add a new task to a column
   Future<void> addTask(String title, String columnId) async {
     try {
-      Map<String, dynamic> taskData = {
+      await _tasksCol.add({
         'title': title,
         'columnId': columnId,
         'date': DateTime.now().toIso8601String(),
-      };
-
-      await _tasksCol.add(taskData);
+        'isCompleted': false,
+      });
     } catch (e) {
       showError(e);
     }
   }
 
-  // Save changes to an existing task
+  // Optimistic update: apply locally first, revert if Firestore write fails
   Future<void> updateTask(Task task) async {
+    int index = tasks.indexWhere((Task t) => t.id == task.id);
+    Task? previous = index != -1 ? tasks[index] : null;
+    if (index != -1) tasks[index] = task;
+
     try {
       Map<String, dynamic> data = task.toJson();
-      data.remove('id'); // The Firestore document ID is not stored as a field
+      data.remove('id');
       await _tasksCol.doc(task.id).update(data);
     } catch (e) {
+      if (index != -1 && previous != null) tasks[index] = previous;
       showError(e);
     }
   }
 
-  // Delete a task from Firestore
+  Future<void> toggleComplete(Task task) async {
+    await updateTask(task.copyWith(isCompleted: !task.isCompleted));
+  }
+
   Future<void> deleteTask(Task task) async {
     try {
       await _tasksCol.doc(task.id).delete();
@@ -142,69 +171,51 @@ class KanbanController extends GetxController {
     }
   }
 
-  // Delete a column and all the tasks inside it
   Future<void> deleteColumn(String columnId) async {
     try {
       WriteBatch batch = _db.batch();
-
-      // Add each task in this column to the batch delete
       for (Task task in tasks) {
         if (task.columnId == columnId) {
           batch.delete(_tasksCol.doc(task.id));
         }
       }
-
-      // Also delete the column document itself
       batch.delete(_columnsCol.doc(columnId));
-
       await batch.commit();
     } catch (e) {
       showError(e);
     }
   }
 
-  // Import a list of tasks into a specific column all at once
   Future<void> importTasks(List<Map<String, String>> tasksData, String columnId) async {
     try {
       WriteBatch batch = _db.batch();
-
       for (Map<String, String> taskData in tasksData) {
         DocumentReference docRef = _tasksCol.doc();
-
-        Map<String, dynamic> firestoreData = {
+        batch.set(docRef, {
           'title': taskData['title'] ?? 'Untitled Task',
           'description': taskData['description'] ?? '',
           'columnId': columnId,
           'date': DateTime.now().toIso8601String(),
-        };
-
-        batch.set(docRef, firestoreData);
+          'isCompleted': false,
+        });
       }
-
       await batch.commit();
     } catch (e) {
       showError(e);
     }
   }
 
-  // Send a copy of a task to another user's board using their email address
   Future<void> assignTaskByEmail(Task task, String email) async {
     try {
-      // Step 1: Look up the other user's UID using their email
       String? assigneeUid = await UserService.findUidByEmail(email);
-
       if (assigneeUid == null) {
         showError('No account found for $email');
         return;
       }
 
-      // Step 2: Get the current user's email to record who sent the task
       String ownerEmail = _auth.currentUser!.email ?? '';
-
-      // Step 3: Update our own task to record who we sent it to
       await _tasksCol.doc(task.id).update({'sharedWith': email});
 
-      // Step 4: Find the first column on the assignee's board to place the task
       QuerySnapshot assigneeColumnsSnap = await _db
           .collection('users')
           .doc(assigneeUid)
@@ -213,28 +224,22 @@ class KanbanController extends GetxController {
           .limit(1)
           .get();
 
-      String targetColumnId;
-      if (assigneeColumnsSnap.docs.isNotEmpty) {
-        targetColumnId = assigneeColumnsSnap.docs.first.id;
-      } else {
-        targetColumnId = 'inbox';
-      }
+      String targetColumnId = assigneeColumnsSnap.docs.isNotEmpty
+          ? assigneeColumnsSnap.docs.first.id
+          : 'inbox';
 
-      // Step 5: Build the task data to send to the assignee
       Map<String, dynamic> taskData = task.toJson();
       taskData.remove('id');
       taskData['columnId'] = targetColumnId;
       taskData['sharedBy'] = ownerEmail;
       taskData.remove('sharedWith');
 
-      // Step 6: Add the task to the assignee's tasks collection
       await _db
           .collection('users')
           .doc(assigneeUid)
           .collection('tasks')
           .add(taskData);
 
-      // Step 7: Show a success message
       Get.snackbar(
         'Task Assigned',
         'Task sent to $email',
@@ -247,15 +252,11 @@ class KanbanController extends GetxController {
     }
   }
 
-  // Ask the AI to generate a description for a task title.
-  // Returns the description string, or throws if the AI call fails.
-  // This lives in the Controller so no widget ever imports AIService directly.
   Future<String> generateTaskDescription(String title) async {
     Map<String, String> result = await AIService.generateTaskDetails(title);
     return result['description'] ?? '';
   }
 
-  // Show an error message at the bottom of the screen
   void showError(Object e) {
     Get.snackbar(
       'Error',
@@ -268,6 +269,7 @@ class KanbanController extends GetxController {
 
   @override
   void onClose() {
+    _authSub?.cancel();
     _tasksSub?.cancel();
     _columnsSub?.cancel();
     super.onClose();
