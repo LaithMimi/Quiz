@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:quiz/controllers/kanban_controller.dart';
 import 'package:quiz/models/column_data.dart';
 import 'package:quiz/models/task_data.dart';
-import 'package:quiz/services/ai_service.dart';
 
 // The card shown for each task in a kanban column
 class TaskCardWidget extends StatefulWidget {
@@ -307,7 +306,9 @@ class _EditTaskSheetState extends State<_EditTaskSheet> {
     super.dispose();
   }
 
-  // Use the AI to fill in the description field
+  // Use the AI to fill in the description field.
+  // The View asks the Controller — the Controller asks the Service.
+  // This widget never imports AIService directly.
   Future<void> _generate() async {
     String title = _title.text.trim();
     if (title.isEmpty) return;
@@ -317,13 +318,12 @@ class _EditTaskSheetState extends State<_EditTaskSheet> {
     });
 
     try {
-      Map<String, String> result = await AIService.generateTaskDetails(title);
+      String description = await Get.find<KanbanController>().generateTaskDescription(title);
 
       // Check mounted because the user might have closed the sheet during the API call
       if (!mounted) return;
 
-      // Fill the form fields with the generated values
-      _description.text = result['description']!;
+      _description.text = description;
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quiz/models/column_data.dart';
 import 'package:quiz/models/task_data.dart';
+import 'package:quiz/services/ai_service.dart';
 import 'package:quiz/services/user_service.dart';
 
 class KanbanController extends GetxController {
@@ -243,6 +244,14 @@ class KanbanController extends GetxController {
     } catch (e) {
       showError(e);
     }
+  }
+
+  // Ask the AI to generate a description for a task title.
+  // Returns the description string, or throws if the AI call fails.
+  // This lives in the Controller so no widget ever imports AIService directly.
+  Future<String> generateTaskDescription(String title) async {
+    Map<String, String> result = await AIService.generateTaskDetails(title);
+    return result['description'] ?? '';
   }
 
   // Show an error message at the bottom of the screen
