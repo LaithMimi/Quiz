@@ -7,13 +7,11 @@ import 'package:quiz/services/auth_service.dart';
 import 'package:quiz/services/user_service.dart';
 
 class SignUpController extends GetxController {
-  // Text controllers for each input field in the sign-up form
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmController = TextEditingController();
 
-  // Observable state variables — the UI will react when these change
   final RxBool isLoading = false.obs;
   final RxBool isVisible = false.obs;
   final RxnString emailError = RxnString();

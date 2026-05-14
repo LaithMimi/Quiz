@@ -6,23 +6,23 @@ class AuthService {
   static final _googleSignIn = GoogleSignIn();
 
   static Future<User?> signInWithGoogle() async {
-    // Step 1 — open the Google account picker
+    // Step 1: open the Google account picker
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
     // User cancelled the picker
     if (googleUser == null) return null;
 
-    // Step 2 — get auth tokens from Google
+    // Step 2: get auth tokens from Google
     final GoogleSignInAuthentication googleAuth =
         await googleUser.authentication;
 
-    // Step 3 — exchange tokens for a Firebase credential
+    // Step 3: exchange tokens for a Firebase credential
     final credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
-    // Step 4 — sign in to Firebase with that credential
+    // Step 4: sign in to Firebase with that credential
     final UserCredential result =
         await _auth.signInWithCredential(credential);
 

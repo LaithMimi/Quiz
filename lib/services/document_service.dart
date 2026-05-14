@@ -4,8 +4,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class DocumentService {
-  // Let the user pick a file and extract the text from it
-  // Returns null if the user cancels or the file cannot be read
+  //to let the user pick a file and extract the text from it
+  //returns null if the user cancels or the file cannot be read
   static Future<String?> pickAndExtractText() async {
     // Open the file picker and only allow PDF and text files
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -14,7 +14,7 @@ class DocumentService {
       withData: true,
     );
 
-    // Return null if the user cancelled
+    //return null if the user cancelled
     if (result == null) {
       return null;
     }
@@ -25,14 +25,13 @@ class DocumentService {
 
     PlatformFile file = result.files.first;
 
-    // Return null if the file has no data
+    //return null if the file has no data
     if (file.bytes == null) {
       return null;
     }
 
     String extension = file.extension?.toLowerCase() ?? '';
 
-    // Use the right reader depending on the file type
     if (extension == 'pdf') {
       return _extractPdfText(file.bytes!);
     } else {
@@ -40,13 +39,13 @@ class DocumentService {
     }
   }
 
-  // Extract plain text from a PDF file
+  //extracting plain text from a PDF file
   static String _extractPdfText(Uint8List bytes) {
     PdfDocument document = PdfDocument(inputBytes: bytes);
     PdfTextExtractor extractor = PdfTextExtractor(document);
     String text = extractor.extractText();
 
-    // Free the memory used by the PDF document
+    //free the memory that is used by the PDF document
     document.dispose();
 
     return text;

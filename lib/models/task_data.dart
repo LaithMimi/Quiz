@@ -21,7 +21,7 @@ class Task {
     this.sharedBy,
   });
 
-  // Convert a Map from Firestore into a Subtask object
+  //converting a Map from Firestore into a Task object
   factory Task.fromJson(Map<String, dynamic> json) {
     String id = json['id'].toString();
     String title = json['title'] as String;

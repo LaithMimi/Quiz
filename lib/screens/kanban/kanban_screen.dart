@@ -10,11 +10,11 @@ class KanbanScreen extends StatelessWidget {
   KanbanScreen({super.key});
 
   // Create and register the controller so it can be found anywhere in the widget tree
-  final KanbanController controller = Get.put(KanbanController());
+  final KanbanController kanban_controller = Get.put(KanbanController());
 
   // Pick a document, extract its text, generate tasks with AI, then show a preview
   Future<void> _importFromDocument() async {
-    // Step 1: Let the user pick a file and read its text
+    // Step 1:Let the user pick a file and read its text
     String? text = await DocumentService.pickAndExtractText();
 
     if (text == null || text.trim().isEmpty) {
@@ -22,7 +22,7 @@ class KanbanScreen extends StatelessWidget {
     }
 
     // Make sure there is at least one column to import tasks into
-    if (controller.columns.isEmpty) {
+    if (kanban_controller.columns.isEmpty) {
       Get.snackbar(
         'No columns',
         'Add at least one column before importing tasks.',
@@ -31,14 +31,14 @@ class KanbanScreen extends StatelessWidget {
       return;
     }
 
-    // Step 2: Show a loading dialog while the AI processes the document
+    // Step 2:Show a loading dialog while the AI processes the document
     Get.dialog(
       const AlertDialog(
         content: Row(
           children: [
             CircularProgressIndicator(),
             SizedBox(width: 20),
-            Expanded(child: Text('Analysing document and generating tasks…')),
+            Expanded(child: Text(' Analysing document and generating tasks…')),
           ],
         ),
       ),
@@ -61,10 +61,10 @@ class KanbanScreen extends StatelessWidget {
       return;
     }
 
-    // Close the loading dialog
+    //close the loading dialog
     Get.back();
 
-    // Show an error if the AI returned no tasks
+    //to show an error if the AI returned no tasks
     if (tasks.isEmpty) {
       Get.snackbar(
         'Failed',
@@ -76,15 +76,15 @@ class KanbanScreen extends StatelessWidget {
       return;
     }
 
-    // Step 4: Show the preview sheet so the user can review and select tasks
+    // Step 4:to show the preview sheet so the user can review and select tasks
     await showModalBottomSheet(
-      context: Get.context!,
+      context: Get.context!, 
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
         return ImportPreviewSheet(
           tasks: tasks,
-          columns: controller.columns,
+          columns: kanban_controller.columns,
         );
       },
     );
@@ -132,7 +132,7 @@ class KanbanScreen extends StatelessWidget {
   void _submitAddColumn(TextEditingController labelController) {
     String label = labelController.text.trim();
     if (label.isNotEmpty) {
-      controller.addColumn(label);
+      kanban_controller.addColumn(label);
       Get.back();
     }
   }
@@ -162,12 +162,12 @@ class KanbanScreen extends StatelessWidget {
       ),
       body: Obx(() {
         // Show a loading spinner while data is being fetched from Firestore
-        if (controller.isLoading.value) {
+        if (kanban_controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
 
         // Show an empty state message if there are no columns yet
-        if (controller.columns.isEmpty) {
+        if (kanban_controller.columns.isEmpty) {
           return Center(
             child: Text(
               'No columns yet.\nTap + to add one.',
@@ -186,11 +186,11 @@ class KanbanScreen extends StatelessWidget {
                 height: constraints.maxHeight,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: controller.columns.map((col) {
+                  children: kanban_controller.columns.map((col) {
                     return KanbanColumn(
                       key: ValueKey(col.id),
                       column: col,
-                      controller: controller,
+                      controller: kanban_controller,
                     );
                   }).toList(),
                 ),
