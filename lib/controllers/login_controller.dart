@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:quiz/services/auth_service.dart';
 import 'package:quiz/services/user_service.dart';
 
 class LoginController extends GetxController {
@@ -39,6 +40,27 @@ class LoginController extends GetxController {
       Get.offNamed('/home'); // if everthing is successful, navigate to the home screen
     } on FirebaseAuthException catch (e) {
       generalError.value = e.message ?? 'Login failed';
+    } catch (e) {
+      generalError.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> signInWithGoogle() async {
+    generalError.value = null;
+    isLoading.value = true;
+
+    try {
+      User? user = await AuthService.signInWithGoogle();
+
+      if (user == null) {
+        // User cancelled the Google picker
+        return;
+      }
+
+      await UserService.saveProfile(user);
+      Get.offNamed('/home');
     } catch (e) {
       generalError.value = e.toString();
     } finally {

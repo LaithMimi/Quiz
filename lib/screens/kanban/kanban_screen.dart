@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quiz/controllers/kanban_controller.dart';
 import 'package:quiz/services/ai_service.dart';
+import 'package:quiz/services/auth_service.dart';
 import 'package:quiz/services/document_service.dart';
 import 'package:quiz/widgets/import_preview_sheet.dart';
+import 'package:quiz/models/column_data.dart';
 import 'package:quiz/widgets/kanban_column.dart';
 
 // KanbanScreen is the main board screen the user sees after logging in.
@@ -153,11 +155,17 @@ class KanbanScreen extends StatelessWidget {
         backgroundColor: const Color.fromARGB(255, 14, 66, 109),
         foregroundColor: Colors.white,
         actions: [
-          // Button in the top-right corner to import tasks from a document
           IconButton(
             icon: const Icon(Icons.upload_file_outlined),
             tooltip: 'Import from document',
             onPressed: _importFromDocument,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sign out',
+            onPressed: () async {
+              await AuthService.signOut();
+            },
           ),
         ],
         // A search bar is placed below the app bar title using "bottom"

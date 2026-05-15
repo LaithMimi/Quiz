@@ -150,8 +150,10 @@ class KanbanController extends GetxController {
     // If "user" is null, that means nobody is logged in anymore.
     _authSub = _auth.authStateChanges().listen((User? user) {
       if (user == null) {
-        // The session ended — send the user back to the login screen.
-        // offAllNamed removes every screen in the stack, so back button won't work.
+        // Cancel Firestore streams first so they don't fire a permissions error
+        // after the auth token is gone.
+        _tasksSub?.cancel();
+        _columnsSub?.cancel();
         Get.offAllNamed('/login');
       }
     });
@@ -198,6 +200,15 @@ class KanbanController extends GetxController {
       },
       onError: showError,
     );
+  }
+
+  // Rename an existing column
+  Future<void> renameColumn(String columnId, String newLabel) async {
+    try {
+      await _columnsCol.doc(columnId).update({'label': newLabel});
+    } catch (error) {
+      showError(error);
+    }
   }
 
   // Add a brand new column to the board
@@ -329,6 +340,11 @@ class KanbanController extends GetxController {
 
   // Send a copy of a task to another user's board using their email address
   Future<void> assignTaskByEmail(Task task, String email) async {
+    if (task.sharedBy != null) {
+      showError('Received tasks cannot be reassigned.');
+      return;
+    }
+
     try {
       // Step 1: Find the other user's account using their email
       String? assigneeUid = await UserService.findUidByEmail(email);
@@ -341,8 +357,8 @@ class KanbanController extends GetxController {
       // Step 2: Save our own email so the receiver knows who sent the task
       String ourEmail = _auth.currentUser!.email ?? '';
 
-      // Step 3: Update our own task to remember we shared it
-      await _tasksCol.doc(task.id).update({'sharedWith': email});
+      // Step 3: Update our own task to remember we shared it and show the assignee
+      await _tasksCol.doc(task.id).update({'sharedWith': email, 'username': email});
 
       // Step 4: Find the first column on the other user's board
       QuerySnapshot theirColumns = await _db

@@ -39,6 +39,49 @@ class KanbanColumn extends StatelessWidget {
     return _columnColors[colorIndex];
   }
 
+  // Show a dialog where the user can type a new name for this column
+  void _showRenameDialog() {
+    TextEditingController nameController =
+        TextEditingController(text: column.label);
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Rename Column'),
+        content: TextField(
+          controller: nameController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'New column name',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (_) => _submitRename(nameController),
+        ),
+        actions: [
+          TextButton(
+            onPressed: Get.back,
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => _submitRename(nameController),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 14, 66, 109),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _submitRename(TextEditingController nameController) {
+    String newLabel = nameController.text.trim();
+    if (newLabel.isNotEmpty && newLabel != column.label) {
+      controller.renameColumn(column.id, newLabel);
+    }
+    Get.back();
+  }
+
   // Show a confirmation dialog before deleting the column
   void _showDeleteColumnDialog() {
     Get.dialog(
@@ -208,6 +251,22 @@ class KanbanColumn extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(Icons.add, color: Colors.white, size: 18),
+                      ),
+                    ),
+
+                    const SizedBox(width: 6),
+
+                    // Pencil button to rename this column
+                    GestureDetector(
+                      onTap: _showRenameDialog,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.edit_outlined, color: Colors.white, size: 16),
                       ),
                     ),
 

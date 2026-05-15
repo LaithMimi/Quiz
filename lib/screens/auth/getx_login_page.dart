@@ -5,6 +5,7 @@ import 'package:quiz/widgets/auth_header.dart';
 import 'package:quiz/widgets/error_text.dart';
 import 'package:quiz/widgets/field_decoration.dart';
 import 'package:quiz/widgets/labeled_divider.dart';
+import 'package:quiz/widgets/google_button.dart';
 import 'package:quiz/widgets/primary_button.dart';
 
 class LoginScreenGetX extends StatelessWidget {
@@ -15,20 +16,23 @@ class LoginScreenGetX extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Obx(
           () => SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                const SizedBox(height: 48),
+
                 const AuthHeader(
-                  icon: Icons.home_rounded,
-                  title: 'Welcome Back!',
-                  subtitle: 'Sign in to continue',
+                  icon: Icons.lock_open_rounded,
+                  title: 'Welcome Back',
+                  subtitle: 'Sign in to your account',
                 ),
-                const SizedBox(height: 32),
+
+                const SizedBox(height: 40),
+
                 TextField(
                   controller: controller.emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -38,7 +42,9 @@ class LoginScreenGetX extends StatelessWidget {
                     prefix: Icons.email_outlined,
                   ),
                 ),
+
                 const SizedBox(height: 16),
+
                 TextField(
                   controller: controller.passwordController,
                   obscureText: !controller.isPasswordVisible.value,
@@ -56,49 +62,48 @@ class LoginScreenGetX extends StatelessWidget {
                     ),
                   ),
                 ),
+
                 ErrorText(message: controller.generalError.value),
+
                 const SizedBox(height: 24),
+
                 PrimaryButton(
-                  label: 'Sign in',
+                  label: 'Sign In',
                   onPressed: controller.login,
                   isLoading: controller.isLoading.value,
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: TextButton(
-                    onPressed: controller.isLoading.value ? null : controller.clearFields,
-                    child: Text(
-                      'Clear fields',
+
+                const SizedBox(height: 20),
+                const LabeledDivider(label: 'or'),
+                const SizedBox(height: 20),
+
+                GoogleButton(
+                  onPressed: controller.isLoading.value ? null : controller.signInWithGoogle,
+                ),
+
+                const SizedBox(height: 36),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account?  ",
                       style: TextStyle(color: Colors.grey.shade600),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const LabeledDivider(label: 'New here?'),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: OutlinedButton.icon(
-                    onPressed: controller.isLoading.value ? null : controller.goToSignUp,
-                    icon: const Icon(Icons.person_add_alt_1_outlined),
-                    label: const Text('Create an account'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color.fromARGB(255, 14, 66, 109),
-                      side: const BorderSide(color: Color.fromARGB(255, 14, 66, 109)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    GestureDetector(
+                      onTap: controller.goToSignUp,
+                      child: const Text(
+                        'Sign up',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 14, 66, 109),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 40),
-                Text(
-                  '© Copyright Laith',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
-                ),
+
+                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -107,3 +112,4 @@ class LoginScreenGetX extends StatelessWidget {
     );
   }
 }
+

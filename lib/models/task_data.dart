@@ -114,31 +114,36 @@ class Task {
     return data;
   }
 
+  // Sentinel used by copyWith to distinguish "caller passed null intentionally"
+  // from "caller didn't pass this field at all".
+  static const Object _absent = Object();
+
   // Since all Task fields are final (can't be changed), we can't do task.title = "New".
   // Instead, copyWith makes a new Task that is identical except for the fields you specify.
   // Example: task.copyWith(title: "New Title") gives you a new Task with everything
   // the same but with a different title.
+  //
+  // For nullable fields like duedate, pass the value you want (including null to clear it).
+  // Omitting the parameter keeps the existing value.
   Task copyWith({
     String? title,
     String? columnId,
     String? username,
     DateTime? date,
-    DateTime? duedate,
+    Object? duedate = _absent,   // Object? so null can be passed intentionally
     String? description,
     String? sharedWith,
     String? sharedBy,
     bool? isCompleted,
   }) {
     return Task(
-      id: id, // the id never changes
-
-      // For each field: use the new value if one was given, otherwise keep the old value.
-      // The "??" symbol means "use the left side, but if it's null, use the right side".
+      id: id,
       title: title ?? this.title,
       columnId: columnId ?? this.columnId,
       username: username ?? this.username,
       date: date ?? this.date,
-      duedate: duedate ?? this.duedate,
+      // If the caller passed nothing, keep existing. If they passed null, clear it.
+      duedate: duedate == _absent ? this.duedate : duedate as DateTime?,
       description: description ?? this.description,
       sharedWith: sharedWith ?? this.sharedWith,
       sharedBy: sharedBy ?? this.sharedBy,

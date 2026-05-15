@@ -217,10 +217,20 @@ class _EditTaskSheetState extends State<EditTaskSheet> {
             InkWell(
               onTap: _pickDate,
               child: InputDecorator(
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Due Date',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today_outlined),
+                  border: const OutlineInputBorder(),
+                  suffixIcon: _duedate != null
+                      ? IconButton(
+                          icon: const Icon(Icons.close, size: 18),
+                          tooltip: 'Clear due date',
+                          onPressed: () {
+                            setState(() {
+                              _duedate = null;
+                            });
+                          },
+                        )
+                      : const Icon(Icons.calendar_today_outlined),
                 ),
                 child: Text(
                   _duedate != null
@@ -239,72 +249,84 @@ class _EditTaskSheetState extends State<EditTaskSheet> {
 
             const SizedBox(height: 8),
 
-            const Text(
-              'Assign to another user',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.black54,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Show who the task is already assigned to, if anyone
-            if (widget.task.sharedWith != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    const Icon(Icons.send, size: 14, color: Colors.green),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Already assigned to ${widget.task.sharedWith}',
-                      style: const TextStyle(fontSize: 12, color: Colors.green),
-                    ),
-                  ],
+            // Tasks received from another user cannot be forwarded further.
+            if (widget.task.sharedBy != null)
+              Row(
+                children: [
+                  const Icon(Icons.move_to_inbox, size: 14, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Assigned to you by ${widget.task.sharedBy}',
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  ),
+                ],
+              )
+            else ...[
+              const Text(
+                'Assign to another user',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black54,
                 ),
               ),
 
-            // Email input and Assign button
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _assignEmail,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email address',
-                      hintText: 'colleague@example.com',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
+              const SizedBox(height: 8),
+
+              if (widget.task.sharedWith != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.send, size: 14, color: Colors.green),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Already assigned to ${widget.task.sharedWith}',
+                        style: const TextStyle(fontSize: 12, color: Colors.green),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _isAssigning ? null : _assign,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 14, 66, 109),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _assignEmail,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'Email address',
+                        hintText: 'colleague@example.com',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
                     ),
                   ),
-                  child: _isAssigning
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Assign'),
-                ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _isAssigning ? null : _assign,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 14, 66, 109),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: _isAssigning
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Assign'),
+                  ),
               ],
             ),
+            ], // end of else (task not received from someone else)
 
             const SizedBox(height: 24),
 

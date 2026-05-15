@@ -169,19 +169,6 @@ class TaskCardWidget extends StatelessWidget {
                             // Small row showing the assignee and the date
                             Row(
                               children: [
-                                const Icon(Icons.person_outline, size: 13, color: Colors.black45),
-                                const SizedBox(width: 4),
-                                Flexible(
-                                  child: Text(
-                                    task.username.isEmpty ? 'Unassigned' : task.username,
-                                    style: const TextStyle(fontSize: 12, color: Colors.black54),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                // Thin vertical divider between assignee and date
-                                Container(width: 1, height: 11, color: Colors.grey.shade300),
-                                const SizedBox(width: 6),
                                 // Calendar icon turns red if the task is overdue
                                 Icon(
                                   Icons.calendar_today_outlined,
