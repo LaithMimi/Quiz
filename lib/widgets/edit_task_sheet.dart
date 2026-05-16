@@ -138,7 +138,6 @@ class _EditTaskSheetState extends State<EditTaskSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Sheet title and close button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -167,7 +166,6 @@ class _EditTaskSheetState extends State<EditTaskSheet> {
 
             const SizedBox(height: 8),
 
-            // Generate description with AI
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -189,7 +187,6 @@ class _EditTaskSheetState extends State<EditTaskSheet> {
 
             const SizedBox(height: 12),
 
-            // Dropdown to move this task to a different column
             DropdownButtonFormField<String>(
               initialValue: _columnId.isEmpty ? null : _columnId,
               decoration: const InputDecoration(
@@ -213,7 +210,6 @@ class _EditTaskSheetState extends State<EditTaskSheet> {
 
             const SizedBox(height: 12),
 
-            // Due date picker
             InkWell(
               onTap: _pickDate,
               child: InputDecorator(
@@ -249,7 +245,7 @@ class _EditTaskSheetState extends State<EditTaskSheet> {
 
             const SizedBox(height: 8),
 
-            // Tasks received from another user cannot be forwarded further.
+            // tasks received from another user cannot be forwarded further
             if (widget.task.sharedBy != null)
               Row(
                 children: [
@@ -324,13 +320,12 @@ class _EditTaskSheetState extends State<EditTaskSheet> {
                           )
                         : const Text('Assign'),
                   ),
-              ],
-            ),
-            ], // end of else (task not received from someone else)
+                ],
+              ),
+            ],
 
             const SizedBox(height: 24),
 
-            // Save button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

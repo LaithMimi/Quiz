@@ -51,11 +51,8 @@ class SignUpController extends GetxController {
     try {
       User? user = await AuthService.signInWithGoogle();
 
-      if (user == null) {
-        return;
-      }
+      if (user == null) return;
 
-      // Save the user's profile so other users can find them by email
       await UserService.saveProfile(user);
 
       Get.off(() => KanbanScreen());
@@ -72,25 +69,21 @@ class SignUpController extends GetxController {
     }
   }
 
-  // Create a new account with email and password
   Future<void> signUp() async {
     String username = usernameController.text.trim();
     String email = emailController.text.trim();
     String password = passwordController.text;
 
-    // Make sure all fields are filled in
     if (username.isEmpty || email.isEmpty || password.isEmpty) {
       generalError.value = 'Please fill in all fields';
       return;
     }
 
-    // Make sure the email format is valid
     if (emailError.value != null) {
       generalError.value = 'Please enter a valid email';
       return;
     }
 
-    // Make sure the two password fields match
     if (password != confirmController.text) {
       confirmError.value = 'Passwords do not match';
       return;
@@ -101,14 +94,11 @@ class SignUpController extends GetxController {
     isLoading.value = true;
 
     try {
-      // Create the account in Firebase Authentication
       UserCredential credential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
 
-      // Save the username to the Firebase Auth user profile
       await credential.user?.updateDisplayName(username);
 
-      // Save the user's profile so other users can find them by email
       await UserService.saveProfile(credential.user!);
 
       Get.off(() => KanbanScreen());
@@ -121,7 +111,6 @@ class SignUpController extends GetxController {
     }
   }
 
-  // Navigate back to the sign-in screen
   void handleSignIn() {
     Get.off(() => LoginScreenGetX());
   }

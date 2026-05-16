@@ -25,51 +25,27 @@ class _ImportPreviewSheetState extends State<ImportPreviewSheet> {
   @override
   void initState() {
     super.initState();
-
-    // Select all tasks by default so the user can deselect only what they don't want
+    // all tasks selected by default so the user only has to deselect what they don't want
     _selected = List.filled(widget.tasks.length, true);
-
-    // Use the first column as the default import destination
-    if (widget.columns.isNotEmpty) {
-      _columnId = widget.columns.first.id;
-    } else {
-      _columnId = '';
-    }
+    _columnId = widget.columns.isNotEmpty ? widget.columns.first.id : '';
   }
 
-  // Count how many tasks are currently checked
   int _getSelectedCount() {
-    int count = 0;
-    for (bool isSelected in _selected) {
-      if (isSelected) {
-        count++;
-      }
-    }
-    return count;
+    return _selected.where((s) => s).length;
   }
 
-  // Import the selected tasks into the chosen column
   Future<void> _import() async {
-    // Build a list of only the tasks that are checked
     List<Map<String, String>> toImport = [];
     for (int i = 0; i < widget.tasks.length; i++) {
-      if (_selected[i]) {
-        toImport.add(widget.tasks[i]);
-      }
+      if (_selected[i]) toImport.add(widget.tasks[i]);
     }
 
-    if (toImport.isEmpty || _columnId.isEmpty) {
-      return;
-    }
+    if (toImport.isEmpty || _columnId.isEmpty) return;
 
-    setState(() {
-      _isImporting = true;
-    });
+    setState(() => _isImporting = true);
 
-    // Ask the controller to save the tasks to Firestore
     await Get.find<KanbanController>().importTasks(toImport, _columnId);
 
-    // Close the sheet after importing
     if (!mounted) return;
     Navigator.pop(context);
   }
@@ -91,7 +67,6 @@ class _ImportPreviewSheetState extends State<ImportPreviewSheet> {
           ),
           child: Column(
             children: [
-              // Drag handle at the top of the sheet
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 12),
                 width: 40,
@@ -131,7 +106,6 @@ class _ImportPreviewSheetState extends State<ImportPreviewSheet> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Dropdown to choose which column to import the tasks into
                     DropdownButtonFormField<String>(
                       initialValue: _columnId.isEmpty ? null : _columnId,
                       decoration: const InputDecoration(
@@ -146,11 +120,7 @@ class _ImportPreviewSheetState extends State<ImportPreviewSheet> {
                         );
                       }).toList(),
                       onChanged: (String? value) {
-                        if (value != null) {
-                          setState(() {
-                            _columnId = value;
-                          });
-                        }
+                        if (value != null) setState(() => _columnId = value);
                       },
                     ),
                     const SizedBox(height: 8),
@@ -160,24 +130,19 @@ class _ImportPreviewSheetState extends State<ImportPreviewSheet> {
 
               const Divider(height: 1),
 
-              // Scrollable list of tasks with checkboxes
               Expanded(
                 child: ListView.separated(
                   controller: scrollController,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   itemCount: widget.tasks.length,
-                  separatorBuilder: (BuildContext context, int index) {
-                    return const Divider(height: 1);
-                  },
+                  separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (BuildContext context, int index) {
                     Map<String, String> task = widget.tasks[index];
                     return CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       value: _selected[index],
                       onChanged: (bool? value) {
-                        setState(() {
-                          _selected[index] = value ?? false;
-                        });
+                        setState(() => _selected[index] = value ?? false);
                       },
                       title: Text(
                         task['title'] ?? '',
@@ -200,7 +165,6 @@ class _ImportPreviewSheetState extends State<ImportPreviewSheet> {
 
               const Divider(height: 1),
 
-              // Cancel and Import buttons at the bottom
               Padding(
                 padding: EdgeInsets.only(
                   left: 20,
@@ -211,9 +175,7 @@ class _ImportPreviewSheetState extends State<ImportPreviewSheet> {
                 child: Row(
                   children: [
                     TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                      onPressed: () => Navigator.pop(context),
                       child: const Text('Cancel'),
                     ),
                     const SizedBox(width: 12),

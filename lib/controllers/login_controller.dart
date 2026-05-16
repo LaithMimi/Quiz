@@ -8,7 +8,6 @@ class LoginController extends GetxController {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  // observable state variables, the UI will react when these change
   final RxBool isLoading = false.obs;
   final RxBool isPasswordVisible = false.obs;
   final RxnString generalError = RxnString();
@@ -37,7 +36,7 @@ class LoginController extends GetxController {
 
       await UserService.saveProfile(credential.user!);
 
-      Get.offNamed('/home'); // if everthing is successful, navigate to the home screen
+      Get.offNamed('/home');
     } on FirebaseAuthException catch (e) {
       generalError.value = e.message ?? 'Login failed';
     } catch (e) {
@@ -54,8 +53,7 @@ class LoginController extends GetxController {
     try {
       User? user = await AuthService.signInWithGoogle();
 
-      if (user == null) {
-        // User cancelled the Google picker
+      if (user == null) { //user cancelled the Google picker
         return;
       }
 

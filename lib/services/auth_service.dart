@@ -9,7 +9,7 @@ class AuthService {
     // Step 1: open the Google account picker
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
-    // User cancelled the picker
+    //user cancelled the picker
     if (googleUser == null) return null;
 
     // Step 2: get auth tokens from Google
@@ -21,12 +21,11 @@ class AuthService {
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
-
-    // Step 4: sign in to Firebase with that credential
+    // Step 4: sign in to Firebase with the Google credential
     final UserCredential result =
         await _auth.signInWithCredential(credential);
 
-    return result.user; // returns the signed-in user
+    return result.user;
   }
 
   static Future<void> signOut() async {
