@@ -20,9 +20,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Skip login screen if the user already has an active session
-    String initialRoute =
-        FirebaseAuth.instance.currentUser != null ? '/home' : '/login';
+    //to skip login screen if the user already has an active session
+    String initialRoute = FirebaseAuth.instance.currentUser != null ? '/home' : '/login';
 
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,

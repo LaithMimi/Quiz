@@ -53,8 +53,7 @@ class LoginScreenGetX extends StatelessWidget {
                     hint: 'Enter your password',
                     prefix: Icons.lock_outline,
                     suffix: IconButton(
-                      icon: Icon(
-                        controller.isPasswordVisible.value
+                      icon: Icon(controller.isPasswordVisible.value
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
                       ),

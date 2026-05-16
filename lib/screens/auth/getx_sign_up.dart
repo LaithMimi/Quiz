@@ -94,9 +94,7 @@ class SignUpScreenGetX extends StatelessWidget {
                       ),
                       onPressed: controller.toggleVisibility,
                     ),
-                    error: (controller.confirmError.value?.isEmpty ?? true)
-                        ? null
-                        : controller.confirmError.value,
+                    error: controller.confirmError.value,
                   ),
                 ),
 

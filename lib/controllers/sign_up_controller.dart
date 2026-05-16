@@ -18,13 +18,11 @@ class SignUpController extends GetxController {
   final RxnString confirmError = RxnString();
   final RxnString generalError = RxnString();
 
-  // Check if an email address has the correct format
   bool _isValidEmail(String email) {
     RegExp emailRegex = RegExp(r'^[\w\.\-]+@([\w\-]+\.)+[a-zA-Z]{2,}$');
     return emailRegex.hasMatch(email);
   }
 
-  // Validate the email field every time the user types a character
   void onEmailChanged(String value) {
     if (value.isEmpty) {
       emailError.value = 'Email cannot be empty';
@@ -35,7 +33,6 @@ class SignUpController extends GetxController {
     }
   }
 
-  // Validate the confirm password field every time the user types a character
   void onConfirmChanged(String value) {
     if (value != passwordController.text) {
       confirmError.value = 'Passwords do not match';
@@ -44,12 +41,10 @@ class SignUpController extends GetxController {
     }
   }
 
-  // Toggle the password field between hidden and visible
   void toggleVisibility() {
     isVisible.value = !isVisible.value;
   }
 
-  // Sign in with Google and navigate to the home screen
   Future<void> handleGoogleSignUp() async {
     isLoading.value = true;
 
